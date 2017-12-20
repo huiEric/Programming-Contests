@@ -1,1 +1,0 @@
-g++ rochambeau.cpp -o mine && g++ AC.cpp -o AC && mine && AC && comp out-mine.txt out-AC.txt /a
