@@ -3,31 +3,19 @@
 #include <algorithm>
 
 using namespace std;
-typedef int64_t INT;
-const int MAX = 40000 + 10;
+typedef long long INT;
+const int MAX = 40000 * 2 + 10;
 struct Building {
     INT a, b, h;
 } buildings[MAX];
-INT temp[MAX << 1], sumv[MAX << 2], setv[MAX << 2], _sum, v;
-int n, cnt, a, b;
+INT temp[MAX], sumv[MAX * 4], setv[MAX * 4], v, a, b;
+int n, cnt;
 
-int findPos(INT x)
+bool comp(Building b1, Building b2)
 {
-    int s = 1, e = cnt + 1;
-    int mid;
-    while (s < e)
-    {
-        mid = (s + e) / 2;
-        if (temp[mid] == x)
-            return mid;
-        if (temp[mid] < x)
-            s = mid + 1;
-        else
-            e = mid;
-    }
-    return -1;
+    return b1.h < b2.h;
 }
-void build()
+inline void build()
 {
     for (int i = cnt << 2 - 1; i >= 1; --i)
     {
@@ -37,13 +25,12 @@ void build()
 }
 void maintain(int o, int L, int R)
 {
-    //colors[o] = 0;
-    if (R > L)
+    if(setv[o] > 0) 
     {
-        sumv[o] = sumv[o * 2] + sumv[o * 2 + 1];
-    }
-    if (setv[o] > 0)
         sumv[o] = setv[o] * (temp[R] - temp[L]);
+        return;
+    }
+    sumv[o] = sumv[o * 2] + sumv[o * 2 + 1];
 }
 void pushdown(int o)
 {
@@ -55,48 +42,38 @@ void pushdown(int o)
 }
 void update(int o, int L, int R)
 {
+    //printf("%d %d %d %ld %ld %ld %ld\n", o, L, R, temp[L], temp[R], a, b);
     int lc = o * 2, rc = o * 2 + 1;
     if (a <= temp[L] && temp[R] <= b)
     {
         setv[o] = max(setv[o], v);
-        //printf("%ld %ld %ld\n", temp[L], temp[R], setv[o]);
+        //printf("%ld %ld %ld %ld\n", temp[L], temp[R], setv[o], v);
     }
     else
     {
         pushdown(o);
         int M = L + (R - L) / 2;
-        if (a <= temp[M])
+        //printf("%ld\n", temp[M]);
+        if (a < temp[M] || b == temp[M])
             update(lc, L, M);
         else
             maintain(lc, L, M);
-        if (b > temp[M])
-            update(rc, M + 1, R);
+        if (b > temp[M] || a == temp[M])
+            update(rc, M, R);
         else
-            maintain(rc, M + 1, R);
+            maintain(rc, M, R);
     }
     maintain(o, L, R);
 }
-void query(int o, int L, int R)
-{
-    if (setv[o] > 0)
-    {
-        _sum += setv[o] * (temp[R] - temp[L]);
-        printf("1 %ld %ld %ld\n", temp[L], temp[R], setv[o]);
-    }
-    else if (a <= temp[L] && b >= temp[R])
-    {
-        _sum += sumv[o];
-        printf("2 %ld %ld %ld\n", temp[L], temp[R], setv[o]);
-    }
-    else
-    {
-        int M = L + (R - L) / 2;
-        if (a <= temp[M])
-            query(o * 2, L, M);
-        if (b > temp[M])
-            query(o * 2 + 1, M + 1, R);
-    }
-}
+// void dfs(int o, int L, int R)
+// {
+//     //printf("%ld %ld %ld\n", temp[L], temp[R], sumv[o]);
+//     printf("%ld %ld %ld\n", temp[L], temp[R], setv[o]);
+//     int M = (L + R) / 2;
+//     if(M == L) return;
+//     dfs(o * 2, L, M);
+//     dfs(o * 2 + 1, M, R);
+// }
 
 int main()
 {
@@ -104,25 +81,29 @@ int main()
 #ifdef LOCAL
     freopen("input.txt", "r", stdin);
 #endif
-    scanf("%d", &n);
-    for(int i = 1; i <= n; ++i)
+    while(scanf("%d", &n) == 1)
     {
-        scanf("%ld%ld%ld", &buildings[i].a, &buildings[i].b, &buildings[i].h);
-        temp[2 * i - 1] = buildings[i].a;
-        temp[2 * i] = buildings[i].b;   
+        for (int i = 1; i <= n; ++i)
+        {
+            scanf("%lld%lld%lld", &buildings[i].a, &buildings[i].b, &buildings[i].h);
+            temp[2 * i - 1] = buildings[i].a;
+            temp[2 * i] = buildings[i].b;
+        }
+        sort(buildings + 1, buildings + 1 + n, comp);
+        sort(temp + 1, temp + 2 * n + 1);
+        cnt = unique(temp + 1, temp + 2 * n + 1) - (temp + 1);
+        //for(int i = 1; i <= cnt; ++i) printf("%ld ", temp[i]);
+        //printf("\n");
+        build();
+        for (int i = 1; i <= n; ++i)
+        {
+            a = buildings[i].a;
+            b = buildings[i].b;
+            v = buildings[i].h;
+            update(1, 1, cnt);
+        }
+        //dfs(1, 1, cnt);
+        printf("%lld\n", sumv[1]);
     }
-    sort(temp + 1, temp + 2 * n + 1);
-    cnt = unique(temp + 1, temp + 2 * n + 1) - (temp + 1);
-    build();
-    for(int i = 1; i <= n; ++i)
-    {
-        a = buildings[i].a;
-        b = buildings[i].b;
-        v = buildings[i].h;
-        update(1, 1, cnt);
-    }
-    _sum = 0;
-    query(1, 1, cnt);
-    printf("%ld\n", _sum);
     return 0;
 }
