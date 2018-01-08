@@ -11,22 +11,6 @@ struct Building {
 INT temp[MAX << 1], sumv[MAX << 2], setv[MAX << 2], _sum, v;
 int n, cnt, a, b;
 
-int findPos(INT x)
-{
-    int s = 1, e = cnt + 1;
-    int mid;
-    while (s < e)
-    {
-        mid = (s + e) / 2;
-        if (temp[mid] == x)
-            return mid;
-        if (temp[mid] < x)
-            s = mid + 1;
-        else
-            e = mid;
-    }
-    return -1;
-}
 void build()
 {
     for (int i = cnt << 2 - 1; i >= 1; --i)
@@ -37,13 +21,10 @@ void build()
 }
 void maintain(int o, int L, int R)
 {
-    //colors[o] = 0;
     if (R > L)
     {
         sumv[o] = sumv[o * 2] + sumv[o * 2 + 1];
     }
-    if (setv[o] > 0)
-        sumv[o] = setv[o] * (temp[R] - temp[L]);
 }
 void pushdown(int o)
 {
@@ -59,7 +40,6 @@ void update(int o, int L, int R)
     if (a <= temp[L] && temp[R] <= b)
     {
         setv[o] = max(setv[o], v);
-        //printf("%ld %ld %ld\n", temp[L], temp[R], setv[o]);
     }
     else
     {
@@ -81,12 +61,10 @@ void query(int o, int L, int R)
     if (setv[o] > 0)
     {
         _sum += setv[o] * (temp[R] - temp[L]);
-        printf("1 %ld %ld %ld\n", temp[L], temp[R], setv[o]);
     }
     else if (a <= temp[L] && b >= temp[R])
     {
         _sum += sumv[o];
-        printf("2 %ld %ld %ld\n", temp[L], temp[R], setv[o]);
     }
     else
     {
